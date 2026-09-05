@@ -5,10 +5,9 @@ import Link from "next/link";
 import { ArrowLeft, Check, FileText, Layers, LoaderCircle, Scissors } from "lucide-react";
 import { PDFDocument } from "pdf-lib";
 import JSZip from "jszip";
-import * as pdfjsLib from "pdfjs-dist";
 import FileDropzone from "../../../components/FileDropzone";
+import { renderPdfThumbnails, type PdfThumbnail } from "../../../lib/pdf/renderThumbnails";
 
-type Thumbnail = { pageNumber: number; imageUrl: string };
 type OutputMode = "single" | "zip";
 
 function parsePageRanges(value: string, pageCount: number) {
@@ -52,7 +51,7 @@ function pagesToRangeText(pages: number[]) {
 
 export default function SplitPdfPage() {
   const [sourceFile, setSourceFile] = useState<File | null>(null);
-  const [thumbnails, setThumbnails] = useState<Thumbnail[]>([]);
+  const [thumbnails, setThumbnails] = useState<PdfThumbnail[]>([]);
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
   const [rangeText, setRangeText] = useState("");
   const [rangeError, setRangeError] = useState("");
@@ -78,21 +77,7 @@ export default function SplitPdfPage() {
     setDownloadUrl("");
     setIsRendering(true);
     try {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-      const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-      const renderedThumbnails: Thumbnail[] = [];
-      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-        const page = await pdf.getPage(pageNumber);
-        const viewport = page.getViewport({ scale: 0.22 });
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.ceil(viewport.width);
-        canvas.height = Math.ceil(viewport.height);
-        const canvasContext = canvas.getContext("2d");
-        if (!canvasContext) throw new Error("Canvas is not available");
-        await page.render({ canvas, canvasContext, viewport }).promise;
-        renderedThumbnails.push({ pageNumber, imageUrl: canvas.toDataURL("image/jpeg", 0.82) });
-      }
-      setThumbnails(renderedThumbnails);
+      setThumbnails(await renderPdfThumbnails(file));
     } catch {
       setError("We could not read this PDF. It may be corrupted, encrypted, or password-protected.");
       setSourceFile(null);
