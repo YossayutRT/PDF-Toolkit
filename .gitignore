@@ -1,1 +1,20 @@
-"REQUIREMENTS.md" 
+REQUIREMENTS.md
+
+# dependencies
+/pdf-toolkit/node_modules
+
+# Next.js
+/pdf-toolkit/.next
+/pdf-toolkit/out
+/pdf-toolkit/build
+
+# environment files
+/pdf-toolkit/.env*
+
+# debug and generated files
+/pdf-toolkit/npm-debug.log*
+/pdf-toolkit/yarn-debug.log*
+/pdf-toolkit/yarn-error.log*
+/pdf-toolkit/.vercel
+/pdf-toolkit/*.tsbuildinfo
+REQUIREMENTS.md
