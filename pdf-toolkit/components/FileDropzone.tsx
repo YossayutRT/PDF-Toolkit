@@ -15,9 +15,25 @@ type FileDropzoneProps = {
 const defaultMaxSize = 50 * 1024 * 1024;
 
 function isAcceptedFile(file: File, accept: string, maxSize: number) {
+  if (file.size > maxSize) return false;
+
   const extension = file.name.toLowerCase().split(".").pop();
-  const isPdf = accept.includes("pdf") && (file.type === "application/pdf" || extension === "pdf");
-  return isPdf && file.size <= maxSize;
+
+  // Check if file type matches accept string
+  if (accept.includes("pdf") && (file.type === "application/pdf" || extension === "pdf")) {
+    return true;
+  }
+  if (accept.includes("image/jpeg") && (file.type === "image/jpeg" || extension === "jpg" || extension === "jpeg")) {
+    return true;
+  }
+  if (accept.includes("image/png") && (file.type === "image/png" || extension === "png")) {
+    return true;
+  }
+  if (accept.includes("image/webp") && (file.type === "image/webp" || extension === "webp")) {
+    return true;
+  }
+
+  return false;
 }
 
 export default function FileDropzone({
@@ -37,7 +53,9 @@ export default function FileDropzone({
     const acceptedFiles = files.filter((file) => isAcceptedFile(file, accept, maxSize));
 
     if (acceptedFiles.length !== files.length) {
-      setRejectionMessage("Only PDF files up to 50 MB each can be added.");
+      const maxMb = maxSize / (1024 * 1024);
+      const fileTypeMsg = accept.includes("pdf") ? "PDF files" : "image files";
+      setRejectionMessage(`Only ${fileTypeMsg} up to ${Math.round(maxMb)} MB each can be added.`);
     } else {
       setRejectionMessage("");
     }
@@ -84,7 +102,7 @@ export default function FileDropzone({
         <span className="dropzone-icon"><FileUp size={24} /></span>
         <strong>{label}</strong>
         <span>{description}</span>
-        <small>PDF only · max 50 MB per file</small>
+        <small>{accept.includes("pdf") ? "PDF" : "Image"} only · max {Math.round(maxSize / (1024 * 1024))} MB per file</small>
       </div>
       {rejectionMessage && <p className="inline-error" role="alert">{rejectionMessage}</p>}
     </div>
